@@ -1,0 +1,1 @@
+Hacer gráficas para 20, 100, 500, 1000 puntos gráficar el error en la energía para ambos metodos, y definir un epsilon cualquiera y mirar con que cantidad de puntos se consiguen con ambos metodos

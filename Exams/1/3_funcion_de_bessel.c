@@ -21,7 +21,7 @@ int main() {
     // Veamos las variables que vamos a utilizar
     int alpha; // Este es el orden de la función de bessel
     double x; // Este define el rango de valores para los cuales vamos a calcular la función de bessel
-    int k; // Este es el iterador de la sumatoria
+    long double k; // Este es el iterador de la sumatoria
     char nombreArchivo[100]; // Este es el nombre del archivo que vamos a ir guardando con cada iteración 
     
     // Archivos para guardar los datos
