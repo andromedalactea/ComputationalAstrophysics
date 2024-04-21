@@ -187,21 +187,21 @@ int extrae_valores_parametros( char L[nLineasArchivo][tamanoString], char coment
             
         // encuentra el parametro en la lista de parametros
         for( j=0; j<totalParametros; j++ )
-            if( strcmp(string1, nombreParametros[j]) == 0) // en el condicional se debe de hacer una comparación en vez de una asignación
+            if( strcmp(string1, nombreParametros[j]) == 0) // En el condicional se debe de hacer una comparación en vez de una asignación
                 break;
         
         // asigna el parametro a la variable correspondiente
         switch ( tipoParametro[j] ) 
           {   
             case INT:     
-                *((int *) apuntadorParametro[j]) = atoi(string2); // se debe de usar atoi en vez de atof ya que se esta llevando a un entero y no un flotante
+                *((int *) apuntadorParametro[j]) = atoi(string2); // Se debe de usar atoi en vez de atof ya que se esta llevando a un entero y no un flotante
                 break;
             case DOUBLE:
                 *((double *) apuntadorParametro[j]) = atof(string2);
                 break;
             case STRING:
                 strcpy(apuntadorParametro[j], string2);
-            }// POSIBLEMENTE AQUI FALTE UN BREAK FINAL
+            }
         }   
     }
     printf("=============================\n");
