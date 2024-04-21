@@ -1,0 +1,7 @@
+# Archivo de parametros para un codigo de N cuerpos
+
+Infile                          ./ics.dat     # Archivo con dociciones iniciales
+Outfile                        ./out.dat   # Archivo de salida
+
+Ncuerpos                   9              # numero de cuerpos a simular
+tIntegracion               10.0         # Tiempo total de integracion
