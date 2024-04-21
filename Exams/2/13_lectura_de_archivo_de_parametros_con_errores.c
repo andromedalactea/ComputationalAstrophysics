@@ -15,13 +15,13 @@ Salida : Lectura del archivo de parametros en pantalla
 
     */
  
-// librerias de C
+// Librerias de C
 #include <stdio.h>
 #include <stdlib.h>  // Corregido de stlib.h a stdlib.h
 #include <string.h>
 
  
-// variables globales
+// Variables globales
 int nLineasArchivo;
 int tamanoString = 1000;
  
@@ -33,7 +33,7 @@ struct Parametros
     double tIntegracion;
 }parametros;  // Se agrego un ; faltante
  
-// rutinas y funciones
+// Rutinas y funciones
 int contador_de_lineas(char *infile);
 int lee_linea_archivos(char *infile, char L[nLineasArchivo][tamanoString], char comentario, int ignorar[nLineasArchivo]);
 int extrae_valores_parametros(char L[nLineasArchivo][tamanoString], char comentario, int ignorar[nLineasArchivo]);
@@ -56,13 +56,13 @@ int main(int argc, char *argv[]) // Se agrego los corchetes faltates asociados a
     nLineasArchivo = contador_de_lineas(infile); // Se espera el archivo no su dirección de momeria como parámetro
     printf("el archivo contiene %d lineas\n\n", nLineasArchivo);
     
-    char lineas[nLineasArchivo][tamanoString]; // matriz de lineas
-    int ignorar[nLineasArchivo]; // vector que controla si una linea es ignorada
+    char lineas[nLineasArchivo][tamanoString]; // Matriz de lineas
+    int ignorar[nLineasArchivo]; // Vector que controla si una linea es ignorada
     
-    // lee todas las lineas del archivo de parametros
+    // Lee todas las lineas del archivo de parametros
     lee_linea_archivos(infile, lineas, comentario, ignorar);
     
-    // extrae los valores de los parametros desde las lineas leidas
+    // Extrae los valores de los parametros desde las lineas leidas
     extrae_valores_parametros( lineas, comentario, ignorar);
     
     // Imprime los parametros
@@ -74,11 +74,11 @@ int main(int argc, char *argv[]) // Se agrego los corchetes faltates asociados a
     printf("parametros.tIntegracion = %lf\n",parametros.tIntegracion);
     printf("======================\n");
     return 0;
-} // fin funcion principal 
+} // Fin funcion principal 
  
 // Esta funcion returna de lineas que tiene un archivo
-// contando la cantidad de saltos de linea almacenados en el archivo
-// hasta que encuentra el final del archivo. 
+// Contando la cantidad de saltos de linea almacenados en el archivo
+// Hasta que encuentra el final del archivo. 
 int contador_de_lineas(char *infile)
 {
 
@@ -102,7 +102,7 @@ int contador_de_lineas(char *infile)
 }
 
 // Esta funcion lee todas las lineas del archivo de parametros y la almacena 
-// en la matriz de linea, cada una es un string.
+// En la matriz de linea, cada una es un string.
 int lee_linea_archivos(char *infile, char L[nLineasArchivo][tamanoString], char comentario, int ignorar[nLineasArchivo])
 {
     int i, j;
@@ -111,23 +111,23 @@ int lee_linea_archivos(char *infile, char L[nLineasArchivo][tamanoString], char 
 
     printf("Archivo leido:\n");
     printf("===============================\n");
-    for( i=0; i<nLineasArchivo; i++ ) // se agregaron dos ; faltantes
+    for( i=0; i<nLineasArchivo; i++ ) // Se agregaron dos ; faltantes
         {
 
             j = ignorar[i] = 0;
-        // detecta lineas en blanco y debe ignorarse
+        // Detecta lineas en blanco y debe ignorarse
         if( (c = fgetc(fInfile)) == '\n'  )     
                 {
                 ignorar[i] = 1;
-                L[i][j] = c; // se cambio la forma de acceder a un puntero de punteros
+                L[i][j] = c; // Se cambio la forma de acceder a un puntero de punteros
                 printf(" - ignorar %d\n", ignorar[i]);
                 continue;
             }
         else     
             {       
                 L[i][j++] = c;        
-                // se debe ignorar las lineas que inicien con el simbolo de comentario y el EOF       
-                if( (c == comentario) || (c == EOF) ) // se cambio el operador or por ||
+                // Se debe ignorar las lineas que inicien con el simbolo de comentario y el EOF       
+                if( (c == comentario) || (c == EOF) ) // Se cambio el operador or por ||
                 ignorar[i] = 1;
 
                 while( (c = fgetc(fInfile)) != '\n' ) // Se usan comillas simples ya que es un caracter y no una cadena de caracteres
@@ -157,7 +157,7 @@ int extrae_valores_parametros( char L[nLineasArchivo][tamanoString], char coment
     #define DOUBLE 2 // Aqui hay tres errores juntos y es que las macros no van con ; al final
     #define STRING 3 // ya que este punto y coma también se vería como parte del valor de la macro
 
-    // asocia los nombres de los parametros con las variables que los va a almacenar
+    // Asocia los nombres de los parametros con las variables que los va a almacenar
     nParametro = 0; // Se cambio == quye es un operador de comparación por uno de asignación =
 
     strcpy(nombreParametros[nParametro], "Infile");
@@ -185,12 +185,12 @@ int extrae_valores_parametros( char L[nLineasArchivo][tamanoString], char coment
             sscanf(L[i],"%s%s%s", string1, string2, string3); // Habian más especificadores de formato que numero de variables asociadas
             printf("string1= %s - string2= %s - string3= %s\n", string1, string2, string3);
             
-        // encuentra el parametro en la lista de parametros
+        // Encuentra el parametro en la lista de parametros
         for( j=0; j<totalParametros; j++ )
             if( strcmp(string1, nombreParametros[j]) == 0) // En el condicional se debe de hacer una comparación en vez de una asignación
                 break;
         
-        // asigna el parametro a la variable correspondiente
+        // Asigna el parametro a la variable correspondiente
         switch ( tipoParametro[j] ) 
           {   
             case INT:     
