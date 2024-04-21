@@ -1,6 +1,6 @@
 reset
 set term pngcairo size 900,600    
-set output 'grafico.png'          
+set output 'grafico_vecinos_linked_list.png'          
 
 # Establecer rangos y etiquetas de ejes
 set xrange [0:100]
