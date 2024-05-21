@@ -1,4 +1,6 @@
 /test
+/Exams/3/*.output
+/Exams/3/output
 # Prerequisites
 *.d
 
