@@ -6,8 +6,7 @@
 
 #define X 0
 #define Y 1
-#define kappa 2.0 // Kernel factor
-#define gravity 1.5 // Gravity acceleration for the fluid particles
+#define gravity 1.0
 
 typedef struct
 {
@@ -31,15 +30,13 @@ typedef struct
   double *dWx;
   double *dWy;
   int type;
-  int cell[2]; // Add the information for the cell for the particle
-
 }Particles;
 
 Particles *part, *auxPart;
 
 int nFluid, nPart;
 
-void ics(int nx, int ny, double dx, double dy, double Lx, double Ly, int nCellsX, int nCellsY);
+void ics(int nx, int ny, double dx, double dy, double Lx, double Ly);
 double W(double r, double h);
 double dW(double r, double dx, double h);
 void testKernel(void);
@@ -89,13 +86,10 @@ int main(int argc, char *argv[])
       printf("Error alocando part\n");
       exit(0);
     }
-  // Calculate the number of cells for the grid
-  int nCellsX = (int)ceil(2*Lx/(kappa*dx));
-  int nCellsY = (int)ceil(2*Ly/(kappa*dy));
 
-  printf("nCellsX = %d, nCellsY = %d\n",nCellsX,nCellsY);
+
   // Create the initial conditions
-  ics( nx, ny, dx, dy, Lx, Ly, nCellsX, nCellsY);
+  ics( nx, ny, dx, dy, Lx, Ly);
 
   // testing kernel function
   testKernel();
@@ -112,13 +106,6 @@ int main(int argc, char *argv[])
   // main loop
   while( t<=tTotal )
     {
-      // Calculate the cell for each particle
-      for( i=0; i<nFluid; i++ )
-        {
-          part[i].cell[X] = (int)ceil(nCellsX*part[i].pos[X]/(2*Lx));
-          part[i].cell[Y] = (int)ceil(nCellsY*part[i].pos[Y]/(2*Ly));
-        }
-    
       
       // searching near neighbors for all fuid particles
       for( i=0; i<nFluid; i++ )
@@ -161,7 +148,7 @@ int main(int argc, char *argv[])
   return 0;
 }
 
-void ics(int nx, int ny, double dx, double dy, double Lx, double Ly, int nCellsX, int nCellsY)
+void ics(int nx, int ny, double dx, double dy, double Lx, double Ly)
 {
   int i, j, counter;
   
@@ -199,9 +186,7 @@ void ics(int nx, int ny, double dx, double dy, double Lx, double Ly, int nCellsX
           part[counter].dWy = NULL;
           part[counter].type = 1;
 
-          // Define cell for the particle
-          part[counter].cell[X] = (int)ceil(nCellsX*part[counter].pos[X]/(2*Lx));
-          part[counter].cell[Y] = (int)ceil(nCellsY*part[counter].pos[Y]/(2*Ly));
+          
 	    counter++;
 	    }
     }
@@ -267,8 +252,7 @@ void ics(int nx, int ny, double dx, double dy, double Lx, double Ly, int nCellsX
       part[counter].type = -1;
 
       // Define cell for the particle
-      part[counter].cell[X] = (int)ceil(nCellsX*part[counter].pos[X]/(2*Lx));
-      part[counter].cell[Y] = (int)ceil(nCellsY*part[counter].pos[Y]/(2*Ly));
+      
       counter++;
     }
 
@@ -333,8 +317,7 @@ void ics(int nx, int ny, double dx, double dy, double Lx, double Ly, int nCellsX
       part[counter].dWy = NULL;
       part[counter].type = -1;
       // Define cell for the particle
-      part[counter].cell[X] = (int)ceil(nCellsX*part[counter].pos[X]/(2*Lx));
-      part[counter].cell[Y] = (int)ceil(nCellsY*part[counter].pos[Y]/(2*Ly));
+      
       counter++;
     }
   
@@ -400,8 +383,7 @@ void ics(int nx, int ny, double dx, double dy, double Lx, double Ly, int nCellsX
       part[counter].type = -1;
 
       // Define cell for the particle
-      part[counter].cell[X] = (int)ceil(nCellsX*part[counter].pos[X]/(2*Lx));
-      part[counter].cell[Y] = (int)ceil(nCellsY*part[counter].pos[Y]/(2*Ly));
+      
 
       counter++;
     }
@@ -469,8 +451,7 @@ void ics(int nx, int ny, double dx, double dy, double Lx, double Ly, int nCellsX
       part[counter].type = -1;
 
       // Define cell for the particle
-      part[counter].cell[X] = (int)ceil(nCellsX*part[counter].pos[X]/(2*Lx));
-      part[counter].cell[Y] = (int)ceil(nCellsY*part[counter].pos[Y]/(2*Ly));
+      
 
       counter++;
     }
@@ -567,8 +548,10 @@ void testKernel(void)
 }
 
 // Searching the near neighbors 
+// Searching the near neighbors 
 void NN(int i)
 {
+  double kappa = 2.0;
   double xij, yij, rij, hij;
   double *auxDouble;
   int j, *auxInt, nNeighbors;
@@ -580,7 +563,7 @@ void NN(int i)
   free(part[i].W);
   free(part[i].dWx);
   free(part[i].dWy);
-  
+
   part[i].nn = NULL;
   part[i].dx = NULL;
   part[i].dy = NULL;
@@ -592,75 +575,72 @@ void NN(int i)
   nNeighbors = 0;
   
   for( j=0; j<nPart; j++ )
-    {  
+    {
+      
       if( i!=j )
 	      {
-          // Conditional to verify if the particle is on the neighborhood
-          if( abs(part[i].cell[X] - part[j].cell[X] ) <= 1 && abs(part[i].cell[Y] - part[j].cell[Y] ) <= 1 )
-            {
-              xij = part[i].pos[X] - part[j].pos[X];
-              yij = part[i].pos[Y] - part[j].pos[Y];
-              rij = sqrt( xij*xij + yij*yij );
-              hij = 0.5*(part[i].h+part[j].h);
+	        xij = part[i].pos[X] - part[j].pos[X];
+	        yij = part[i].pos[Y] - part[j].pos[Y];
+	        rij = sqrt( xij*xij + yij*yij );
+	        hij = 0.5*(part[i].h+part[j].h);
+	  
+	  
+	        if( rij <= kappa*hij + 1e-10  )
+	          {
+	            nNeighbors++;
 
-              // Show the particles and your cells
-              if( rij <= kappa*hij + 1e-10  )
-                {
-                  nNeighbors++;
+	            // add neighbor id
+	            auxInt = NULL;
+	            auxInt = (int *)realloc(part[i].nn,(size_t)(nNeighbors)*sizeof(int));
+	            part[i].nn = auxInt;
+	            auxInt = NULL;
+	      	      
+	            // add neighbor dx
+	            auxDouble = NULL;
+	            auxDouble = (double *)realloc(part[i].dx,(size_t)(nNeighbors)*sizeof(double));
+	            part[i].dx = auxDouble;
+	            auxDouble = NULL;
 
-                  // add neighbor id
-                  auxInt = NULL;
-                  auxInt = (int *)realloc(part[i].nn,(size_t)(nNeighbors)*sizeof(int));
-                  part[i].nn = auxInt;
-                  auxInt = NULL;
-                    
-                  // add neighbor dx
-                  auxDouble = NULL;
-                  auxDouble = (double *)realloc(part[i].dx,(size_t)(nNeighbors)*sizeof(double));
-                  part[i].dx = auxDouble;
-                  auxDouble = NULL;
+	            // add neighbor dy
+	            auxDouble = NULL;
+	            auxDouble = (double *)realloc(part[i].dy,(size_t)(nNeighbors)*sizeof(double));
+	            part[i].dy = auxDouble;
+	            auxDouble = NULL;
 
-                  // add neighbor dy
-                  auxDouble = NULL;
-                  auxDouble = (double *)realloc(part[i].dy,(size_t)(nNeighbors)*sizeof(double));
-                  part[i].dy = auxDouble;
-                  auxDouble = NULL;
+	            // add neighbor r
+	            auxDouble = NULL;
+	            auxDouble = (double *)realloc(part[i].r,(size_t)(nNeighbors)*sizeof(double));
+	            part[i].r = auxDouble;
+	            auxDouble = NULL;
+	      
+	            // add neighbor W
+	            auxDouble = NULL;
+	            auxDouble = (double *)realloc(part[i].W,(size_t)(nNeighbors)*sizeof(double));
+	            part[i].W = auxDouble;
+	            auxDouble = NULL;
 
-                  // add neighbor r
-                  auxDouble = NULL;
-                  auxDouble = (double *)realloc(part[i].r,(size_t)(nNeighbors)*sizeof(double));
-                  part[i].r = auxDouble;
-                  auxDouble = NULL;
-            
-                  // add neighbor W
-                  auxDouble = NULL;
-                  auxDouble = (double *)realloc(part[i].W,(size_t)(nNeighbors)*sizeof(double));
-                  part[i].W = auxDouble;
-                  auxDouble = NULL;
-
-                  // add neighbor dWx
-                  auxDouble = NULL;
-                  auxDouble = (double *)realloc(part[i].dWx,(size_t)(nNeighbors)*sizeof(double));
-                  part[i].dWx = auxDouble;
-                  auxDouble = NULL;
-            
-                  // add neighbor dWy
-                  auxDouble = NULL;
-                  auxDouble = (double *)realloc(part[i].dWy,(size_t)(nNeighbors)*sizeof(double));
-                  part[i].dWy = auxDouble;
-                  auxDouble = NULL;
-            
-                  part[i].nn[nNeighbors-1] = j;
-                  part[i].dx[nNeighbors-1] = xij;
-                  part[i].dy[nNeighbors-1] = yij;
-                  part[i].r[nNeighbors-1] = rij;
-                  part[i].W[nNeighbors-1] = W( rij, hij ); 
-                  part[i].dWx[nNeighbors-1] = dW( rij, xij, hij);
-                  part[i].dWy[nNeighbors-1] = dW( rij, yij, hij);
-            
-                }  
-            }
-        }
+              // add neighbor dWx
+              auxDouble = NULL;
+              auxDouble = (double *)realloc(part[i].dWx,(size_t)(nNeighbors)*sizeof(double));
+              part[i].dWx = auxDouble;
+              auxDouble = NULL;
+	      
+              // add neighbor dWy
+              auxDouble = NULL;
+              auxDouble = (double *)realloc(part[i].dWy,(size_t)(nNeighbors)*sizeof(double));
+              part[i].dWy = auxDouble;
+              auxDouble = NULL;
+	      
+              part[i].nn[nNeighbors-1] = j;
+              part[i].dx[nNeighbors-1] = xij;
+              part[i].dy[nNeighbors-1] = yij;
+              part[i].r[nNeighbors-1] = rij;
+              part[i].W[nNeighbors-1] = W( rij, hij ); 
+              part[i].dWx[nNeighbors-1] = dW( rij, xij, hij);
+              part[i].dWy[nNeighbors-1] = dW( rij, yij, hij);
+	      
+	          }  
+	      }
     }
   part[i].nNeighbors = nNeighbors;
 }
@@ -946,4 +926,14 @@ void printState(char *outfile)
   
   fclose(fState);
 
+}
+
+// Function to add gravity to the particles
+void movement_for_aceleration(double dt)
+{
+  int i;
+  for( i=0; i<nFluid; i++ )
+    {
+      part[i].accel[Y] = part[i].accel[Y] - gravity;
+    }
 }
