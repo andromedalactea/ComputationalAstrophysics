@@ -252,7 +252,6 @@ void ics(int nx, int ny, double dx, double dy, double Lx, double Ly, int nCellsX
       part[counter].pos[X] = i*dx/2.0;
       part[counter].pos[Y] = 0.0;
       part[counter].vel[X] = 0.0;
-      //part[counter].vel[X] = -vBoundary;
       part[counter].vel[Y] = 0.0;
       part[counter].accel[X] = 0.0;
       part[counter].accel[Y] = 0.0;
@@ -321,7 +320,6 @@ void ics(int nx, int ny, double dx, double dy, double Lx, double Ly, int nCellsX
       part[counter].pos[Y] = dy/2.0 + i*dy/2.0;
       part[counter].vel[X] = 0.0;
       part[counter].vel[Y] = 0.0;
-      //part[counter].vel[Y] = -vBoundary;
       part[counter].accel[X] = 0.0;
       part[counter].accel[Y] = 0.0;
       part[counter].rho = 1000;
@@ -458,7 +456,6 @@ void ics(int nx, int ny, double dx, double dy, double Lx, double Ly, int nCellsX
       part[counter].pos[Y] = dy/2.0 + i*dy/2.0;
       part[counter].vel[X] = 0.0;
       part[counter].vel[Y] = 0.0;
-      // part[counter].vel[Y] = vBoundary;
       part[counter].accel[X] = 0.0;
       part[counter].accel[Y] = 0.0;
       part[counter].rho = 1000;
