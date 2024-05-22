@@ -3,11 +3,14 @@ Este programa simula el movimiento de un fluido utilizando el método de partíc
 Smoothed Particle Hydrodynamics (SPH). La simulación considera una aceleración
 gravitacional implícita que causa que las partículas del fluido caigan y se distribuyan
 en el fondo del dominio de simulación. El código está escrito en C y sigue los pasos
-estándar del método SPH, incluyendo la inicialización de condiciones, la búsqueda de vecinos,
+estándar del método SPH, incluyendo la inicialización de condiciones, la búsqueda de vecinos con Linked list,
 la integración de las ecuaciones de movimiento y la actualización de las propiedades de las partículas.
 
 Ejecute y compile el código con el siguiente comando:
 gcc sph_exam.c -o sph_exam_ejecutable.out -lm ; time ./sph_exam_ejecutable.out 4000
+
+Recuerde crear la carpeta output antes de ejecutar el código, además de tener el
+archivo de gráficos gnuplot dentro de esta
 */
 
 #include<stdio.h>
