@@ -1,3 +1,15 @@
+/*
+Este programa simula el movimiento de un fluido utilizando el método de partículas
+Smoothed Particle Hydrodynamics (SPH). La simulación considera una aceleración
+gravitacional implícita que causa que las partículas del fluido caigan y se distribuyan
+en el fondo del dominio de simulación. El código está escrito en C y sigue los pasos
+estándar del método SPH, incluyendo la inicialización de condiciones, la búsqueda de vecinos,
+la integración de las ecuaciones de movimiento y la actualización de las propiedades de las partículas.
+
+Ejecute y compile el código con el siguiente comando:
+gcc sph_exam.c -o sph_exam_ejecutable.out -lm ; time ./sph_exam_ejecutable.out 4000
+*/
+
 #include<stdio.h>
 #include<stdlib.h>
 #include<math.h>
@@ -7,32 +19,33 @@
 #define X 0
 #define Y 1
 #define kappa 2.0 // Kernel factor
-#define gravity 1.5 // Gravity acceleration for the fluid particles
+#define gravity -1.5 // Gravity acceleration for the fluid particles
 
+// Structure for the particles
 typedef struct
 {
-  int id;
-  double pos[2];
-  double vel[2];
-  double accel[2];
-  double mass;
-  double rho;
-  double h;
-  double p;
+  int id; // Particle id
+  double pos[2]; // Position of the particle
+  double vel[2]; // Velocity of the particle
+  double accel[2]; // Acceleration of the particle
+  double mass; // Mass of the particle
+  double rho; // Density of the particle
+  double h; // Smoothing length of the particle
+  double p; 
   double c;
   double du;
   double u;
-  int *nn;
-  int nNeighbors;
-  double *dx;
-  double *dy;
-  double *r;
-  double *W;
-  double *dWx;
-  double *dWy;
-  int type;
-  int cell[2]; // Add the information for the cell for the particle
+  int *nn; // Neighbors of the particle
+  int nNeighbors; // Number of neighbors
+  double *dx; // Distance in x for the neighbors of the particle 
+  double *dy; // Distance in y for the neighbors of the particle
+  double *r; // Distance for the neighbors of the particle
+  double *W; // Kernel for the neighbors of the particle
+  double *dWx; // Derivative of the kernel in x for the neighbors of the particle
+  double *dWy; // Derivative of the kernel in y for the neighbors of the particle
+  int type; // Type of the particle (1 for fluid, -1 for boundary)
 
+  int cell[2]; // Cell for the particle in the grid
 }Particles;
 
 Particles *part, *auxPart;
@@ -57,9 +70,6 @@ void drift(double dt);
 void kick(double dt);
 void printState(char *outfile);
 
-// Function to add gravity to the particles
-void movement_for_aceleration(double dt);
-
 int main(int argc, char *argv[])
 {
 
@@ -69,7 +79,6 @@ int main(int argc, char *argv[])
   double dt = 5e-5;
   double t, tTotal = atoi(argv[1])*dt;
   char outfiles[500];
-  //double t, tTotal = 4000*dt;
 
   printf("voy a correr durante %d pasos, un tiempo total de %lf s\n",atoi(argv[1]),tTotal);
     
@@ -97,19 +106,17 @@ int main(int argc, char *argv[])
   // Create the initial conditions
   ics( nx, ny, dx, dy, Lx, Ly, nCellsX, nCellsY);
 
-  // testing kernel function
+  // Testing kernel function
   testKernel();
 
- 
-       
   counter = 0;
   t = 0;
   
-  // printting system initial state
+  // Printting system initial state
   sprintf(outfiles,"./output/state_%.4d",counter);
   printState(outfiles);
   
-  // main loop
+  // Main loop
   while( t<=tTotal )
     {
       // Calculate the cell for each particle
@@ -120,35 +127,33 @@ int main(int argc, char *argv[])
         }
     
       
-      // searching near neighbors for all fuid particles
+      // Searching near neighbors for all fuid particles
       for( i=0; i<nFluid; i++ )
 	      NN(i);
       
-      // testing near neighbors searching
+      // Testing near neighbors searching
       if(counter==0)
 	      test_NN();
       
-
-      // computing density
-
+      // Computing density
       density();
             
-      // drift in leap-frog integration
+      // Drift in leap-frog integration
       drift(dt);
 
-      // computing acceleration
+      // Computing acceleration
       acceleration(dx);  
 
-      // kick in leap-frog integration
+      // Kick in leap-frog integration
       kick(dt);
       
-      // drift in leap-frog integration
+      // Drift in leap-frog integration
       drift(dt);
 	
       t = t + dt;
       counter++;
 
-      // printting system state
+      // Printting system state
       sprintf(outfiles,"./output/state_%.4d",counter);
       printState(outfiles);
 
@@ -169,7 +174,6 @@ void ics(int nx, int ny, double dx, double dy, double Lx, double Ly, int nCellsX
   fFluidIcs = fopen("fluid_ics.output","w");
     
   // ics for fluid particles
-  
   counter = 0;
   for( j=0; j<ny; j++)
     {
@@ -216,7 +220,7 @@ void ics(int nx, int ny, double dx, double dy, double Lx, double Ly, int nCellsX
   int npV = npVirtI/4;
   
   printf("npV = %d\n",npV);
-  // bottom border, 81 points
+  // bottom border, 161 points
 
   fbBorder = fopen("bottom_border.output","w");
 
@@ -269,6 +273,7 @@ void ics(int nx, int ny, double dx, double dy, double Lx, double Ly, int nCellsX
       // Define cell for the particle
       part[counter].cell[X] = (int)ceil(nCellsX*part[counter].pos[X]/(2*Lx));
       part[counter].cell[Y] = (int)ceil(nCellsY*part[counter].pos[Y]/(2*Ly));
+
       counter++;
     }
 
@@ -285,7 +290,7 @@ void ics(int nx, int ny, double dx, double dy, double Lx, double Ly, int nCellsX
   
   fclose(fbBorder);
   
-  // right border, 79 points
+  // right border, 159 points
 
   frBorder = fopen("right_border.output","w");
 
@@ -332,9 +337,11 @@ void ics(int nx, int ny, double dx, double dy, double Lx, double Ly, int nCellsX
       part[counter].dWx = NULL;
       part[counter].dWy = NULL;
       part[counter].type = -1;
+
       // Define cell for the particle
       part[counter].cell[X] = (int)ceil(nCellsX*part[counter].pos[X]/(2*Lx));
       part[counter].cell[Y] = (int)ceil(nCellsY*part[counter].pos[Y]/(2*Ly));
+
       counter++;
     }
   
@@ -351,7 +358,7 @@ void ics(int nx, int ny, double dx, double dy, double Lx, double Ly, int nCellsX
   
   fclose(frBorder);
   
-  // top border, 81 points
+  // top border, 161 points
 
   ftBorder = fopen("top_border.output","w");
 
@@ -419,7 +426,7 @@ void ics(int nx, int ny, double dx, double dy, double Lx, double Ly, int nCellsX
   
   fclose(ftBorder);
   
-  // left border, 79 points
+  // left border, 159 points
 
   flBorder = fopen("left_border.output","w");
   
@@ -489,7 +496,6 @@ void ics(int nx, int ny, double dx, double dy, double Lx, double Ly, int nCellsX
   fclose(flBorder);
   
   // print all particles
-
   nPart = counter;
  
   for( i=0; i<nPart; i++)
@@ -510,7 +516,6 @@ void ics(int nx, int ny, double dx, double dy, double Lx, double Ly, int nCellsX
 
 double W(double r, double h)
 {
-  
   double R = r/h;
   
   double alpha = 15.0/(7.0*M_PI*h*h);
@@ -559,9 +564,7 @@ void testKernel(void)
       dw = dW( fabs(r), r/sqrt(3.0), 1.0);
 
       fprintf(fKernelTest,"%16.10lf %16.10lf %16.10lf\n",r,w,dw);
-      
     }
-
   fclose(fKernelTest);
   
 }
@@ -675,7 +678,6 @@ void test_NN(void)
    
    for( k=0; k<20; k++)
     {
-
       i = rand() % nFluid;
       
       printf("testing for particle %d\n",i);
@@ -704,15 +706,15 @@ void density(void)
   
   for( i=0; i<nFluid; i++ )
     {
-      // self density
+      // Self density
       wii = W( 0.0, part[i].h );
       
-      // computing density
+      // Computing density
       part[i].rho = part[i].mass*wii;
       for( j=0; j<part[i].nNeighbors; j++ )
 	      part[i].rho = part[i].rho + part[part[i].nn[j]].mass*part[i].W[j];
 
-      // normalizing the density
+      // Normalizing the density
       norm = (part[i].mass/part[i].rho)*wii;
       for( j=0; j<part[i].nNeighbors; j++ )
 	      norm = norm + (part[part[i].nn[j]].mass/part[part[i].nn[j]].rho)*part[i].W[j];
@@ -740,15 +742,15 @@ void navierStokes(void)
 
   int i, j, k;
   double pij, vdw;
-  // computing sound speed and pression
+  // Computing sound speed and pression
   eos();
 
-  // computing acceleration
+  // Computing acceleration
   for( i=0; i<nFluid; i++ )
     {
       
       part[i].accel[X] = 0.0;
-      part[i].accel[Y] = -gravity;
+      part[i].accel[Y] = gravity;
       part[i].du = 0.0;
 
       for( k=0; k<part[i].nNeighbors; k++ )
@@ -884,16 +886,16 @@ void meanVelocity(void)
 void acceleration(double dx)
 {
 
-  // computing acceleration and change of energy
+  // Computing acceleration and change of energy
   navierStokes();
   
-  // computing viscosity contribution
+  // Computing viscosity contribution
   viscosity(dx);
   
-  // computing interaction with boundary
+  // Computing interaction with boundary
   boundaryInteraction(dx);
 
-  // correction to mean velocity
+  // Correction to mean velocity
   meanVelocity();
 
   printf("acceleration computed\n");
