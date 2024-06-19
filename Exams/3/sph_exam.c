@@ -22,7 +22,7 @@ archivo de gráficos gnuplot dentro de esta
 #define X 0
 #define Y 1
 #define kappa 2.0 // Kernel factor
-#define gravity -1.5 // Gravity acceleration for the fluid particles
+#define gravity -9.8// Gravity acceleration for the fluid particles
 
 // Structure for the particles
 typedef struct

@@ -1,6 +1,7 @@
 /test
 /Exams/3/*.output
-/Exams/3/output
+/Exams/3/output/
+/Exams/3/output_dam_collage
 # Prerequisites
 *.d
 
